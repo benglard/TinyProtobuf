@@ -9,7 +9,7 @@ Write some struct definitions in python. Add fields and vectors and then compile
 ```py
 from compile import *
 int32 = struct('Int32') \
-  .add_field('data', int32_t, default_value=3)
+  .add_field('data', int32_t, bitfield=4)
 int32_array = struct('Int32Array') \
   .add_vector('data', int32_t, default_value=range(10))
 
@@ -50,8 +50,9 @@ msg.deserialize(msg_array.data(), msg_array.size());
 
 - Namespaces
 - All numeric types, bool, vector's
-- Default value
+- Default values
 - Bitfields (without default value until c++20 I hear)
+- Ordered fields for backwards compatibility
 
 ## TODO
 

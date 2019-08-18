@@ -10,14 +10,16 @@ float32_t = 'float'
 float64_t = 'double'
 bool_t    = uint8_t
 
+from collections import OrderedDict
+
 class struct(object):
     def __init__(self, name):
         self.name = name
-        self.fields = {}
-        self.bitfields = {}
-        self.field_default_values = {}
-        self.vectors = {}
-        self.vector_default_values = {}
+        self.fields = OrderedDict()
+        self.bitfields = OrderedDict()
+        self.field_default_values = OrderedDict()
+        self.vectors = OrderedDict()
+        self.vector_default_values = OrderedDict()
     def add_field(self, name, type, default_value=0, bitfield=None):
         self.fields[name] = type
         self.bitfields[name] = bitfield
