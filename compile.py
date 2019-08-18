@@ -85,7 +85,7 @@ inline void deserialize(const char* buffer, const size_t buffer_size) {
                 rv += ': {}'.format(bitfield)
             rv += ';\n';
         for key, _ in self.vectors.items():
-            rv += '  std::size_t {}_size;\n'.format(key)
+            rv += '  std::size_t {}_size{{{}}};\n'.format(key, len(self.vector_default_values[key]))
         rv += '};\n'
         rv += '__header__ header_;\nstatic const std::size_t HEADER_SIZE{sizeof(__header__)};\n'
         for key, value in self.vectors.items():

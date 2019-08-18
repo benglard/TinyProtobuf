@@ -99,12 +99,12 @@ private:
 
 struct __header__ {
   std::int32_t data2{0};
-  std::size_t data_size;
-  std::size_t data3_size;
+  std::size_t data_size{10};
+  std::size_t data3_size{0};
 };
 __header__ header_;
 static const std::size_t HEADER_SIZE{sizeof(__header__)};
-std::vector<std::int32_t> data{};
+std::vector<std::int32_t> data{0,1,2,3,4,5,6,7,8,9};
 std::vector<std::int32_t> data3{};
 
 };
