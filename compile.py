@@ -14,30 +14,41 @@ class struct(object):
     def __init__(self, name):
         self.name = name
         self.fields = {}
+        self.bitfields = {}
+        self.field_default_values = {}
         self.vectors = {}
-    def add_field(self, name, type):
+        self.vector_default_values = {}
+    def add_field(self, name, type, default_value=0, bitfield=None):
         self.fields[name] = type
+        self.bitfields[name] = bitfield
+        self.field_default_values[name] = default_value
         return self
-    def add_vector(self, name, type):
+    def add_vector(self, name, type, default_value=()):
         self.vectors[name] = type
+        if isinstance(default_value, list) or isinstance(default_value, tuple):
+            self.vector_default_values[name] = default_value
+        else:
+            self.vector_default_values[name] = [default_value]
         return self
     def compile(self):
         rv = 'class {} {{\npublic:\n'.format(self.name)
         rv += """
-inline std::size_t size() {
+inline std::size_t size() const {
   std::size_t total_size{HEADER_SIZE};
 """
         for key, value in self.vectors.items():
             rv += '  total_size += {}.size() * sizeof({});\n'.format(key, value)
         rv += '  return total_size;\n}\n\n'
         for key, value in self.fields.items():
-            rv += 'inline {} get_{}() {{ return header_.{}; }}\n'.format(value, key, key)
+            rv += 'inline {} get_{}() const {{ return header_.{}; }}\n'.format(value, key, key)
             rv += 'inline void set_{}(const {}& i) {{ header_.{} = i; }}\n'.format(key, value, key)
+            rv += 'inline void move_{}({}&& i) {{ header_.{} = std::move(i); }}\n'.format(key, value, key)
         for key, value in self.vectors.items():
-            rv += 'inline std::vector<{}> get_{}() {{ return {}; }}\n'.format(value, key, key)
-            rv += 'inline void set_{}(const std::vector<{}>& i) {{ {} = i; header_.{}_size = i.size(); }}\n'.format(key, value, key, key)
+            rv += 'inline std::vector<{}> get_{}() const {{ return {}; }}\n'.format(value, key, key)
+            rv += 'inline void set_{}(const std::vector<{}>& i) {{ header_.{}_size = i.size(); {} = i; }}\n'.format(key, value, key, key)
+            rv += 'inline void move_{}(std::vector<{}>&& i) {{ header_.{}_size = i.size(); {} = std::move(i); }}\n'.format(key, value, key, key)
         rv += """
-inline void serialize(char* buffer) {
+inline void serialize(char* buffer) const {
   std::size_t index = 0;
   std::size_t next_size = HEADER_SIZE;
   std::memcpy(buffer + index, &header_, next_size);
@@ -64,17 +75,25 @@ inline void deserialize(const char* buffer, const size_t buffer_size) {
         rv += 'private:\n\n'
         rv += 'struct __header__ {\n'
         for key, value in self.fields.items():
-            rv += '  {} {};\n'.format(value, key)
+            rv += '  {} {}'.format(value, key)
+            bitfield = self.bitfields[key]
+            if bitfield is None:
+                rv += '{{{}}}'.format(self.field_default_values[key])
+            else:
+                rv += ': {}'.format(bitfield)
+            rv += ';\n';
         for key, _ in self.vectors.items():
             rv += '  std::size_t {}_size;\n'.format(key)
         rv += '};\n'
         rv += '__header__ header_;\nstatic const std::size_t HEADER_SIZE{sizeof(__header__)};\n'
         for key, value in self.vectors.items():
-            rv += 'std::vector<{}> {};\n'.format(value, key)
+            rv += 'std::vector<{}> {}'.format(value, key)
+            rv += '{{{}}}'.format(','.join(map(str, self.vector_default_values[key])))
+            rv += ';\n'
         rv += '\n};\n'
         return rv
     def __repr__(self):
-        return self.compile()
+        return self.name
 
 class namespace(object):
     def __init__(self, name):

@@ -8,10 +8,12 @@ int main(void) {
   i.serialize(is.data());
   std_msgs::Int32 i2;
   i2.deserialize(is.data(), is.size());
-  std::cout << "i size = " << i.get_data() << std::endl << "i deser size = " << i2.get_data() << std::endl;
+  std::cout << "i data = " << i.get_data() << std::endl << "i deser data = " << i2.get_data() << std::endl;
 
   std_msgs::Int32Array ia;
-  ia.set_data(std::vector<std::int32_t>{1, 2, 3});
+  std::vector<std::int32_t> arr{1, 2, 3};
+  ia.move_data(std::move(arr));
+  std::cout << "arr size after move = " << arr.size() << std::endl;
   const auto& rv = ia.get_data();
   std::cout << "i arr size = " << rv.size() << std::endl;
   for (const auto v : rv) {

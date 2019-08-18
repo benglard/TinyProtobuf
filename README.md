@@ -8,8 +8,10 @@ Write some struct definitions in python. Add fields and vectors and then compile
 
 ```py
 from compile import *
-int32 = struct('Int32').add_field('data', int32_t)
-int32_array = struct('Int32Array').add_vector('data', int32_t)
+int32 = struct('Int32') \
+  .add_field('data', int32_t, default_value=3)
+int32_array = struct('Int32Array') \
+  .add_vector('data', int32_t, default_value=range(10))
 
 ns = namespace('std_msgs')
 ns += int32
@@ -17,13 +19,15 @@ ns += int32_array
 ns.compile('msg.h')
 ```
 
-This message can then be used in c++. Set and get data fields
+This message can then be used in c++. Set, get, and move data into message fields
 
 ```cpp
 std_msgs::Int32 i;
 i.set_data(5);
+
 std_msgs::Int32Array ia;
-ia.set_data(std::vector<std::int32_t>{1, 2, 3});
+std::vector<std::int32_t> arr{1, 2, 3};
+ia.move_data(std::move(arr));
 const auto& rv = ia.get_data();
 ```
 
@@ -41,3 +45,17 @@ To deserialize a message from a byte array
 std_msgs::Int32 msg;
 msg.deserialize(msg_array.data(), msg_array.size());
 ```
+
+## Features
+
+- Namespaces
+- All numeric types, bool, vector's
+- Default value
+- Bitfields (without default value until c++20 I hear)
+
+## TODO
+
+- Composite types
+- Enums, Unions
+- Script Includes
+- Msg unique id's
